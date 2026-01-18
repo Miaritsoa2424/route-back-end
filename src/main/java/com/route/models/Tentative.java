@@ -19,7 +19,7 @@ public class Tentative {
 
     @ManyToOne
     @JoinColumn(name = "id_user", nullable = false)
-    private User user;
+    private Users user;
 
     // Getters and Setters
     public Integer getIdTentativeLog() {
@@ -46,11 +46,11 @@ public class Tentative {
         this.succes = succes;
     }
 
-    public User getUser() {
+    public Users getUser() {
         return user;
     }
 
-    public void setUser(User user) {
+    public void setUser(Users user) {
         this.user = user;
     }
 }
