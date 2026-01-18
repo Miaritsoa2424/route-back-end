@@ -1,4 +1,4 @@
-FROM maven:3.8.7-eclipse-temurin-17
+FROM maven:3.9.6-eclipse-temurin-17
 
 WORKDIR /app
 
@@ -11,4 +11,3 @@ RUN mvn dependency:go-offline
 EXPOSE 8080
 
 CMD ["mvn", "spring-boot:run"]
-
