@@ -1,7 +1,11 @@
 package com.route.models;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "statut_signalement")
 public class StatutSignalement {
@@ -16,28 +20,4 @@ public class StatutSignalement {
     @Column(name = "ordre", nullable = false)
     private Integer ordre;
 
-    // Getters and Setters
-    public Integer getIdStatut() {
-        return idStatut;
-    }
-
-    public void setIdStatut(Integer idStatut) {
-        this.idStatut = idStatut;
-    }
-
-    public String getLibelle() {
-        return libelle;
-    }
-
-    public void setLibelle(String libelle) {
-        this.libelle = libelle;
-    }
-
-    public Integer getOrdre() {
-        return ordre;
-    }
-
-    public void setOrdre(Integer ordre) {
-        this.ordre = ordre;
-    }
 }

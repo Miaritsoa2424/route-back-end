@@ -13,8 +13,11 @@ import java.util.Optional;
 @RequestMapping("/api/avancements")
 public class AvancementController {
 
-    @Autowired
-    private AvancementRepository avancementRepository;
+    private final AvancementRepository avancementRepository;
+
+    public AvancementController(AvancementRepository avancementRepository) {
+        this.avancementRepository = avancementRepository;
+    }
 
     @GetMapping
     public List<Avancement> getAllAvancements() {

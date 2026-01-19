@@ -1,8 +1,13 @@
 package com.route.models;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "tentative")
 public class Tentative {
@@ -21,36 +26,4 @@ public class Tentative {
     @JoinColumn(name = "id_user", nullable = false)
     private Users user;
 
-    // Getters and Setters
-    public Integer getIdTentativeLog() {
-        return idTentativeLog;
-    }
-
-    public void setIdTentativeLog(Integer idTentativeLog) {
-        this.idTentativeLog = idTentativeLog;
-    }
-
-    public LocalDateTime getDateTentative() {
-        return dateTentative;
-    }
-
-    public void setDateTentative(LocalDateTime dateTentative) {
-        this.dateTentative = dateTentative;
-    }
-
-    public Boolean getSucces() {
-        return succes;
-    }
-
-    public void setSucces(Boolean succes) {
-        this.succes = succes;
-    }
-
-    public Users getUser() {
-        return user;
-    }
-
-    public void setUser(Users user) {
-        this.user = user;
-    }
 }

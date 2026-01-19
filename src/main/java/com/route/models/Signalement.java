@@ -2,12 +2,16 @@ package com.route.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
 import java.math.BigDecimal;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "signalement")
 public class Signalement {
@@ -49,52 +53,4 @@ public class Signalement {
     @ManyToOne
     @JoinColumn(name = "id_user", nullable = false)
     private Users user;
-
-    public Integer getIdSignalement() {
-        return idSignalement;
-    }
-
-    public void setIdSignalement(Integer idSignalement) {
-        this.idSignalement = idSignalement;
-    }
-
-    public BigDecimal getSurface() {
-        return surface;
-    }
-
-    public void setSurface(BigDecimal surface) {
-        this.surface = surface;
-    }
-
-    public BigDecimal getBudget() {
-        return budget;
-    }
-
-    public void setBudget(BigDecimal budget) {
-        this.budget = budget;
-    }
-
-    public Point getLocalisation() {
-        return localisation;
-    }
-
-    public void setLocalisation(Point localisation) {
-        this.localisation = localisation;
-    }
-
-    public Entreprise getEntreprise() {
-        return entreprise;
-    }
-
-    public void setEntreprise(Entreprise entreprise) {
-        this.entreprise = entreprise;
-    }
-
-    public Users getUser() {
-        return user;
-    }
-
-    public void setUser(Users user) {
-        this.user = user;
-    }
 }

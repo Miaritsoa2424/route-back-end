@@ -13,8 +13,11 @@ import java.util.Optional;
 @RequestMapping("/api/entreprises")
 public class EntrepriseController {
 
-    @Autowired
-    private EntrepriseRepository entrepriseRepository;
+    private final EntrepriseRepository entrepriseRepository;
+
+    public EntrepriseController(EntrepriseRepository entrepriseRepository) {
+        this.entrepriseRepository = entrepriseRepository;
+    }
 
     @GetMapping
     public List<Entreprise> getAllEntreprises() {

@@ -13,8 +13,11 @@ import java.util.Optional;
 @RequestMapping("/api/signalements")
 public class SignalementController {
 
-    @Autowired
-    private SignalementRepository signalementRepository;
+    private final SignalementRepository signalementRepository;
+
+    public SignalementController(SignalementRepository signalementRepository) {
+        this.signalementRepository = signalementRepository;
+    }
 
     @GetMapping
     public List<Signalement> getAllSignalements() {
