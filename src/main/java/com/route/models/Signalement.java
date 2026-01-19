@@ -1,6 +1,11 @@
 package com.route.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.locationtech.jts.geom.Point;
+
 import java.math.BigDecimal;
 
 @Entity
@@ -17,9 +22,25 @@ public class Signalement {
     @Column(name = "budget", precision = 15, scale = 2)
     private BigDecimal budget;
 
-    @Lob
-    @Column(name = "localisation", nullable = false)
-    private String localisation;
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    @JsonIgnore
+    @Column(name = "localisation", nullable = false, columnDefinition = "geography(Point,4326)")
+    private Point localisation;
+
+    // Ajoutez ces getters (assumant que localisation est un Point)
+    public double getLongitude() {
+        if (localisation instanceof Point) {
+            return ((Point) localisation).getX();
+        }
+        return 0.0;
+    }
+
+    public double getLatitude() {
+        if (localisation instanceof Point) {
+            return ((Point) localisation).getY();
+        }
+        return 0.0;
+    }
 
     @ManyToOne
     @JoinColumn(name = "id_entreprise")
@@ -29,7 +50,6 @@ public class Signalement {
     @JoinColumn(name = "id_user", nullable = false)
     private Users user;
 
-    // Getters and Setters
     public Integer getIdSignalement() {
         return idSignalement;
     }
@@ -54,11 +74,11 @@ public class Signalement {
         this.budget = budget;
     }
 
-    public String getLocalisation() {
+    public Point getLocalisation() {
         return localisation;
     }
 
-    public void setLocalisation(String localisation) {
+    public void setLocalisation(Point localisation) {
         this.localisation = localisation;
     }
 
