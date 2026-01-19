@@ -32,4 +32,9 @@ public class Users {
     @JoinColumn(name = "id_profil", nullable = false)
     private Profil profil;
 
+    @Column(name = "failed_attempts", nullable = false)
+    private Integer failedAttempts = 0;
+
+    @Column(name = "blocked", nullable = false)
+    private Boolean blocked = false;
 }
