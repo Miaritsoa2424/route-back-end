@@ -1,8 +1,13 @@
 package com.route.models;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "signalement_statut")
 public class SignalementStatut {
@@ -26,44 +31,4 @@ public class SignalementStatut {
     @JoinColumn(name = "id_signalement", nullable = false)
     private Signalement signalement;
 
-    // Getters and Setters
-    public Integer getIdSignalementStatut() {
-        return idSignalementStatut;
-    }
-
-    public void setIdSignalementStatut(Integer idSignalementStatut) {
-        this.idSignalementStatut = idSignalementStatut;
-    }
-
-    public LocalDateTime getDateStatut() {
-        return dateStatut;
-    }
-
-    public void setDateStatut(LocalDateTime dateStatut) {
-        this.dateStatut = dateStatut;
-    }
-
-    public Users getUser() {
-        return user;
-    }
-
-    public void setUser(Users user) {
-        this.user = user;
-    }
-
-    public StatutSignalement getStatutSignalement() {
-        return statutSignalement;
-    }
-
-    public void setStatutSignalement(StatutSignalement statutSignalement) {
-        this.statutSignalement = statutSignalement;
-    }
-
-    public Signalement getSignalement() {
-        return signalement;
-    }
-
-    public void setSignalement(Signalement signalement) {
-        this.signalement = signalement;
-    }
 }

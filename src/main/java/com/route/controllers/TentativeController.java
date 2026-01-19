@@ -13,8 +13,11 @@ import java.util.Optional;
 @RequestMapping("/api/tentatives")
 public class TentativeController {
 
-    @Autowired
-    private TentativeRepository tentativeRepository;
+    private final TentativeRepository tentativeRepository;
+
+    public TentativeController(TentativeRepository tentativeRepository) {
+        this.tentativeRepository = tentativeRepository;
+    }
 
     @GetMapping
     public List<Tentative> getAllTentatives() {

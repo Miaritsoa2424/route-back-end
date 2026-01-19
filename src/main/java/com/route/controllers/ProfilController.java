@@ -13,8 +13,11 @@ import java.util.Optional;
 @RequestMapping("/api/profils")
 public class ProfilController {
 
-    @Autowired
-    private ProfilRepository profilRepository;
+    private final ProfilRepository profilRepository;
+
+    public ProfilController(ProfilRepository profilRepository) {
+        this.profilRepository = profilRepository;
+    }
 
     @GetMapping
     public List<Profil> getAllProfils() {
