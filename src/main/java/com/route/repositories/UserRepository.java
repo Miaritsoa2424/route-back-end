@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<Users, Integer> {
     Users findByIdentifiantAndPassword(String identifiant, String password);
     Users findByIdentifiant(String identifiant);
+    java.util.List<Users> findByBlockedTrue();
 }

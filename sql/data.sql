@@ -15,7 +15,7 @@ INSERT INTO statut_signalement (libelle, ordre) VALUES
 ('En attente', 1),
 ('En cours', 2),
 ('Résolu', 3),
-('Rejeté', 4);``
+('Rejeté', 4);
 
 -- Insertion dans users (liée à profil)
 INSERT INTO users (identifiant, password, date_creation, date_derniere_connexion, id_profil, failed_attempts, blocked) VALUES
