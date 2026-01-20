@@ -89,6 +89,13 @@ public class LoginService {
 		return userRepository.save(user);
 	}
 
+	public Users unblockUser(Integer userId) {
+		Users user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+		user.setBlocked(false);
+		user.setFailedAttempts(0);
+		return userRepository.save(user);
+	}
+
 	/**
 	 * Register a new user. Throws IllegalArgumentException if identifiant already exists.
 	 */
