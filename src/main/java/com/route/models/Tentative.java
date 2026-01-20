@@ -22,8 +22,9 @@ public class Tentative {
     @Column(name = "succes", nullable = false)
     private Boolean succes;
 
-    @ManyToOne
-    @JoinColumn(name = "id_user", nullable = false)
+    // Make the association optional/nullable so we can log attempts where the user does not exist
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "id_user", nullable = true)
     private Users user;
 
 }
