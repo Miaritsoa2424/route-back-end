@@ -54,4 +54,9 @@ public class UserController {
     public void deleteUser(@PathVariable Integer id) {
         userRepository.deleteById(id);
     }
+
+    @GetMapping("/blocked")
+    public java.util.List<Users> getBlockedUsers() {
+        return userRepository.findByBlockedTrue();
+    }
 }
