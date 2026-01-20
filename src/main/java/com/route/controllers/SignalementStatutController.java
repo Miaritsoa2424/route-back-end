@@ -2,7 +2,7 @@ package com.route.controllers;
 
 import com.route.models.SignalementStatut;
 import com.route.repositories.SignalementStatutRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.route.services.SignalementStatutService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,9 +14,11 @@ import java.util.Optional;
 public class SignalementStatutController {
 
     private final SignalementStatutRepository signalementStatutRepository;
+    private final SignalementStatutService signalementStatutService;
 
-    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository) {
+    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository, SignalementStatutService signalementStatutService) {
         this.signalementStatutRepository = signalementStatutRepository;
+        this.signalementStatutService = signalementStatutService;
     }
 
     @GetMapping
@@ -52,5 +54,10 @@ public class SignalementStatutController {
     @DeleteMapping("/{id}")
     public void deleteSignalementStatut(@PathVariable Integer id) {
         signalementStatutRepository.deleteById(id);
+    }
+
+    @GetMapping("/latest")
+    public List<SignalementStatut> getLatestStatuses() {
+        return signalementStatutService.getLatestStatuses();
     }
 }
