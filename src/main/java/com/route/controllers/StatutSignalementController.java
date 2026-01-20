@@ -13,11 +13,8 @@ import java.util.Optional;
 @RequestMapping("/api/statut-signalements")
 public class StatutSignalementController {
 
-    private final StatutSignalementRepository statutSignalementRepository;
-
-    public StatutSignalementController(StatutSignalementRepository statutSignalementRepository) {
-        this.statutSignalementRepository = statutSignalementRepository;
-    }
+    @Autowired
+    private StatutSignalementRepository statutSignalementRepository;
 
     @GetMapping
     public List<StatutSignalement> getAllStatutSignalements() {
