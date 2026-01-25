@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 
 @Repository
 public interface SignalementRepository extends JpaRepository<Signalement, Integer> {
+    Signalement findByFirestoreId(String firestoreId);
 
     @Query("SELECT COUNT(s) FROM Signalement s")
     long countSignalements();

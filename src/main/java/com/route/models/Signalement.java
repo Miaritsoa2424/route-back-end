@@ -53,4 +53,8 @@ public class Signalement {
     @ManyToOne
     @JoinColumn(name = "id_user", nullable = false)
     private Users user;
+
+    @Column(name = "id_firestore", unique = true) // Ajoute cette ligne
+    private String firestoreId;
+
 }

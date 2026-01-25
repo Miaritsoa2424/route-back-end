@@ -1,12 +1,24 @@
 package com.route.controllers;
 
+import com.route.FirebaseDTO.LocalisationDto;
+import com.route.FirebaseDTO.SignalementDto;
+import com.route.models.Avancement;
 import com.route.models.Signalement;
+import com.route.models.SignalementStatut;
+import com.route.repositories.AvancementRepository;
 import com.route.repositories.SignalementRepository;
+import com.route.repositories.SignalementStatutRepository;
+import com.route.services.SignalementService;
+
+import io.grpc.netty.shaded.io.netty.util.Signal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -15,8 +27,59 @@ public class SignalementController {
 
     private final SignalementRepository signalementRepository;
 
-    public SignalementController(SignalementRepository signalementRepository) {
+    private final SignalementService signalementService;
+
+    private final AvancementRepository avancementRepository;
+
+    private final SignalementStatutRepository signalementStatutRepository;
+
+    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository) {
         this.signalementRepository = signalementRepository;
+        this.signalementService = signalementService;
+        this.avancementRepository = avancementRepository;
+        this.signalementStatutRepository = signalementStatutRepository;
+    }
+
+    @PostMapping("/sync-to-firebase")
+    public String syncToFirebase() throws ExecutionException, InterruptedException {
+        List<Signalement> signalements = getAllSignalements();
+        List<SignalementDto> dtos = new ArrayList<>();
+        for (Signalement s : signalements) {
+            SignalementDto dto = new SignalementDto();
+            dto.setId(s.getIdSignalement().toString()); // Use ID as string
+            dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
+            dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
+            // Compute avancement: Sum latest Avancement.avancement for this signalement
+            List<Avancement> avancements = avancementRepository.findBySignalement(s);
+            dto.setAvancement(avancements.stream().mapToInt(a -> a.getAvancement().intValue()).sum()); // Or take latest
+            // Compute dernierStatut: Latest StatutSignalement.libelle for this signalement
+            List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
+            dto.setDernierStatut(statuts.stream().max((a,b) -> a.getDateStatut().compareTo(b.getDateStatut())).map(ss -> ss.getStatutSignalement().getLibelle()).orElse("Unknown"));
+            dto.setUser(s.getUser().getIdentifiant()); // Assuming User has identifiant
+            dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
+            // Localisation
+            if (s.getLocalisation() != null) {
+                LocalisationDto loc = new LocalisationDto();
+                loc.setLatitude(s.getLatitude());
+                loc.setLongitude(s.getLongitude());
+                dto.setLocalisation(loc);
+            }
+            dtos.add(dto);
+        }
+        signalementService.syncAllSignalementsToFirebase(dtos);
+        return "Sync completed";
+    }
+
+    @PostMapping("/sync-from-firebase")
+    public String syncFromFirebase() throws ExecutionException, InterruptedException {
+        return signalementService.syncFromFirebaseToDB();
+    }
+
+    @GetMapping("/dto")
+    public List<SignalementDto> listSignalementsDto() throws ExecutionException, InterruptedException {
+        // This method should ideally call a service to fetch data from Firestore
+        // For simplicity, returning an empty list here
+        return signalementService.listProjets();
     }
 
     @GetMapping

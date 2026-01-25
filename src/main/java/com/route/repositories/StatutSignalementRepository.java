@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StatutSignalementRepository extends JpaRepository<StatutSignalement, Integer> {
+    StatutSignalement findStatutByLibelle(String libelle);
 }

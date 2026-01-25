@@ -32,9 +32,22 @@ public class Users {
     @JoinColumn(name = "id_profil", nullable = false)
     private Profil profil;
 
-    @Column(name = "failed_attempts", nullable = false)
+    @Column(name = "failed_attempts", nullable = false, columnDefinition = "integer default 0")
     private Integer failedAttempts = 0;
 
-    @Column(name = "blocked", nullable = false)
+    @Column(name = "blocked", nullable = false, columnDefinition = "boolean default false")
     private Boolean blocked = false;
+
+    @PrePersist
+    private void prePersist() {
+        if (this.failedAttempts == null) {
+            this.failedAttempts = 0;
+        }
+        if (this.blocked == null) {
+            this.blocked = false;
+        }
+        if (this.dateCreation == null) {
+            this.dateCreation = LocalDateTime.now();
+        }
+    }
 }

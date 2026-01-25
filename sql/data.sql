@@ -1,6 +1,6 @@
 -- Insertion dans profil
 INSERT INTO profil (libelle, ordre) VALUES
-('Administrateur', 1),
+('Admin', 1),
 ('Utilisateur', 2),
 ('Modérateur', 3);
 
@@ -18,6 +18,7 @@ INSERT INTO statut_signalement (libelle, ordre) VALUES
 ('Rejeté', 4);
 
 -- Insertion dans users (liée à profil)
+-- Ajout des colonnes failed_attempts et blocked pour conformité avec le modèle JPA
 INSERT INTO users (identifiant, password, date_creation, date_derniere_connexion, id_profil, failed_attempts, blocked) VALUES
 ('rakoto@gmail.mg', 'admin', '2026-01-01 10:00:00', '2026-10-01 15:30:00', 1, 0, false),
 ('sarah@gmail.mg', 'sarah', '2026-02-15 09:00:00', NULL, 2, 0, false),
