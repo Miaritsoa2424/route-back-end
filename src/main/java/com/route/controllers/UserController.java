@@ -1,5 +1,8 @@
 package com.route.controllers;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
 import com.route.models.Users;
 import com.route.repositories.UserRepository;
 import com.route.services.LoginService;
@@ -20,10 +23,12 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final LoginService loginService;
+    private final FirebaseAuth firebaseAuth;
 
-    public UserController(UserRepository userRepository, LoginService loginService) {
+    public UserController(UserRepository userRepository, LoginService loginService, FirebaseAuth firebaseAuth) {
         this.userRepository = userRepository;
         this.loginService = loginService;
+        this.firebaseAuth = firebaseAuth;
     }
 
     @GetMapping
@@ -36,10 +41,10 @@ public class UserController {
         return userRepository.findById(id);
     }
 
-    @PostMapping
-    public Users createUser(@RequestBody Users user) {
-        return userRepository.save(user);
-    }
+    // @PostMapping
+    // public Users createUser(@RequestBody Users user) {
+    //     return userRepository.save(user);
+    // }
 
     @PutMapping("/{id}")
     public Users updateUser(@PathVariable Integer id, @RequestBody Users userDetails) {
@@ -80,4 +85,37 @@ public class UserController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@RequestBody Users user) {
+        try {
+            // Sauvegarder en base de données
+            Users savedUser = userRepository.save(user);
+
+            // Créer dans Firebase Auth
+            UserRecord.CreateRequest request = new UserRecord.CreateRequest()
+                    .setEmail(savedUser.getIdentifiant())  // Assumant que identifiant est l'email
+                    .setPassword(savedUser.getPassword())
+                    .setEmailVerified(false);
+
+            UserRecord firebaseUser = firebaseAuth.createUser(request);
+
+            return ResponseEntity.ok(savedUser);
+        } catch (FirebaseAuthException e) {
+            // En cas d'erreur, supprimer de la DB pour éviter l'incohérence
+            if (user.getIdUser() != null) {
+                userRepository.deleteById(user.getIdUser());
+            }
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "FirebaseAuthError");
+            error.put("message", "Erreur Firebase: " + e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "DatabaseError");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
 }
