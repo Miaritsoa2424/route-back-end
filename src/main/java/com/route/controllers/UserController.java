@@ -2,10 +2,15 @@ package com.route.controllers;
 
 import com.route.models.Users;
 import com.route.repositories.UserRepository;
+import com.route.services.LoginService;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*")
@@ -14,9 +19,11 @@ import java.util.Optional;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final LoginService loginService;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, LoginService loginService) {
         this.userRepository = userRepository;
+        this.loginService = loginService;
     }
 
     @GetMapping
@@ -53,5 +60,24 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Integer id) {
         userRepository.deleteById(id);
+    }
+
+    @GetMapping("/blocked")
+    public List<Users> getBlockedUsers() {
+        return userRepository.findByBlockedTrue();
+    }
+
+    
+    @PostMapping("/{userId}/unblock")
+    public ResponseEntity<?> unblockUserById(@PathVariable Integer userId) {
+        try {
+            Users updated = loginService.unblockUser(userId);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "UserNotFound");
+            error.put("message", e.getMessage());   
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 }
