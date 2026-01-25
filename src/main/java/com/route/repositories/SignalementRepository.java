@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SignalementRepository extends JpaRepository<Signalement, Integer> {
+    Signalement findByFirestoreId(String firestoreId);
 }
