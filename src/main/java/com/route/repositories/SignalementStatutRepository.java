@@ -17,4 +17,9 @@ public interface SignalementStatutRepository extends JpaRepository<SignalementSt
 
     @Query("SELECT ss FROM SignalementStatut ss WHERE ss.dateStatut = (SELECT MAX(ss2.dateStatut) FROM SignalementStatut ss2 WHERE ss2.signalement = ss.signalement)")
     List<SignalementStatut> findLatestStatuses();
+
+    @Query("SELECT ss FROM SignalementStatut ss WHERE ss.signalement.idSignalement = ?1 ORDER BY ss.dateStatut DESC")
+    List<SignalementStatut> findBySignalementIdOrderByDateStatutDesc(Integer signalementId);
+
+    SignalementStatut findTopBySignalementIdSignalementOrderByDateStatutDesc(Integer signalementId);
 }

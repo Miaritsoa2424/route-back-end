@@ -40,34 +40,51 @@ public class SignalementController {
         this.signalementStatutRepository = signalementStatutRepository;
     }
 
-    @PostMapping("/sync-to-firebase")
-    public String syncToFirebase() throws ExecutionException, InterruptedException {
-        List<Signalement> signalements = getAllSignalements();
-        List<SignalementDto> dtos = new ArrayList<>();
-        for (Signalement s : signalements) {
-            SignalementDto dto = new SignalementDto();
-            dto.setId(s.getIdSignalement().toString()); // Use ID as string
-            dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
-            dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
-            // Compute avancement: Sum latest Avancement.avancement for this signalement
-            List<Avancement> avancements = avancementRepository.findBySignalement(s);
-            dto.setAvancement(avancements.stream().mapToInt(a -> a.getAvancement().intValue()).sum()); // Or take latest
-            // Compute dernierStatut: Latest StatutSignalement.libelle for this signalement
-            List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
-            dto.setDernierStatut(statuts.stream().max((a,b) -> a.getDateStatut().compareTo(b.getDateStatut())).map(ss -> ss.getStatutSignalement().getLibelle()).orElse("Unknown"));
-            dto.setUser(s.getUser().getIdentifiant()); // Assuming User has identifiant
-            dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
-            // Localisation
-            if (s.getLocalisation() != null) {
-                LocalisationDto loc = new LocalisationDto();
-                loc.setLatitude(s.getLatitude());
-                loc.setLongitude(s.getLongitude());
-                dto.setLocalisation(loc);
+    @PostMapping("/sync")
+    public String syncToFirebase() {
+        try {
+            List<Signalement> signalements = signalementRepository.findByFirestoreIdIsNull();
+            List<SignalementDto> dtos = new ArrayList<>();
+            for (Signalement s : signalements) {
+                SignalementDto dto = new SignalementDto();
+                dto.setId(s.getIdSignalement().toString()); // Use ID as string
+                dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
+                dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
+                // Compute avancement: Sum latest Avancement.avancement for this signalement
+                List<Avancement> avancements = avancementRepository.findBySignalement(s);
+                dto.setAvancement(avancements.stream().mapToInt(a -> a.getAvancement().intValue()).sum()); // Or take latest
+                // Compute dernierStatut: Latest StatutSignalement.libelle for this signalement
+                List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
+                dto.setDernierStatut(statuts.stream().max((a,b) -> a.getDateStatut().compareTo(b.getDateStatut())).map(ss -> ss.getStatutSignalement().getLibelle()).orElse("Unknown"));
+                dto.setUser(s.getUser().getIdentifiant()); // Assuming User has identifiant
+                dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
+                // Localisation
+                if (s.getLocalisation() != null) {
+                    LocalisationDto loc = new LocalisationDto();
+                    loc.setLatitude(s.getLatitude());
+                    loc.setLongitude(s.getLongitude());
+                    dto.setLocalisation(loc);
+                }
+                dtos.add(dto);
             }
-            dtos.add(dto);
+            signalementService.syncFromFirebaseToDB();
+            signalementService.syncAllSignalementsToFirebase(dtos);
+            signalementService.updateDernierStatutInFirestore();
+
+            return "Sync completed";
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+            return "Sync failed: " + e.getMessage();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Sync failed: " + e.getMessage();
         }
-        signalementService.syncAllSignalementsToFirebase(dtos);
-        return "Sync completed";
+    }
+
+    @PostMapping("/update-firestore-status")
+    public String updateFirestoreStatus() throws ExecutionException, InterruptedException {
+       signalementService.updateDernierStatutInFirestore();
+        return "Update completed";
     }
 
     @PostMapping("/sync-from-firebase")
@@ -79,7 +96,7 @@ public class SignalementController {
     public List<SignalementDto> listSignalementsDto() throws ExecutionException, InterruptedException {
         // This method should ideally call a service to fetch data from Firestore
         // For simplicity, returning an empty list here
-        return signalementService.listProjets();
+        return signalementService.listSignalements();
     }
 
     @GetMapping

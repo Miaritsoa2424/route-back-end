@@ -15,11 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.Optional;
 
 import com.route.FirebaseDTO.SignalementDto;
 import com.route.models.Entreprise;
 import com.route.models.Signalement;
 import com.route.models.SignalementStatut;
+import com.route.models.StatutSignalement;
 import com.route.models.Users;
 import com.route.repositories.EntrepriseRepository;
 import com.route.repositories.SignalementRepository;
@@ -47,7 +49,7 @@ public class SignalementService {
         this.entrepriseRepository = entrepriseRepository;
     }
 
-    public List<SignalementDto> listProjets()
+    public List<SignalementDto> listSignalements()
             throws ExecutionException, InterruptedException {
 
         Firestore db = FirestoreClient.getFirestore();
@@ -90,6 +92,14 @@ public class SignalementService {
         return projets;
     }
 
+    public SignalementDto getSignalementByIdFireStore(String idFirestore) throws ExecutionException, InterruptedException{
+        for (SignalementDto dto : listSignalements()) {
+            if (dto.getIdFirestore().equals(idFirestore)) {
+                return dto;
+            }
+        }
+        return null;
+    }
 
     // New method: Save a SignalementDto to Firebase (for syncing)
     public void saveSignalementToFirebase(SignalementDto signalementDto) throws ExecutionException, InterruptedException {
@@ -104,13 +114,21 @@ public class SignalementService {
             data.put("localisation", new GeoPoint(signalementDto.getLocalisation().getLatitude(), signalementDto.getLocalisation().getLongitude()));
         }
         
-        data.put("user", signalementDto.getUser());
+        data.put("email", signalementDto.getUser());
         data.put("dernier_statut", signalementDto.getDernierStatut());
         data.put("entreprise", signalementDto.getEntreprise());
         
         // Use the ID as document ID, or generate one if null
-        String docId = signalementDto.getId() != null ? signalementDto.getId() : db.collection(COLLECTION_NAME).document().getId();
-        
+        String docId = signalementDto.getIdFirestore() != null ? signalementDto.getIdFirestore() : db.collection(COLLECTION_NAME).document().getId();
+
+        Signalement signalement = signalementRepository.findById(Integer.parseInt(signalementDto.getId())).orElse(null);
+
+            if (signalement != null) {
+                // Update the Firestore ID in the database
+                signalement.setFirestoreId(docId);
+                signalementRepository.save(signalement);
+            }
+
         ApiFuture<WriteResult> future = db.collection(COLLECTION_NAME).document(docId).set(data);
         future.get(); // Wait for completion
     }
@@ -124,8 +142,9 @@ public class SignalementService {
         }
     }
 
+
     public String syncFromFirebaseToDB() throws ExecutionException, InterruptedException {
-        List<SignalementDto> dtos = listProjets(); // Fetch from Firestore
+        List<SignalementDto> dtos = listSignalements(); // Fetch from Firestore
         GeometryFactory geometryFactory = new GeometryFactory(); // For PostGIS Point
 
         for (SignalementDto dto : dtos) {
@@ -163,11 +182,18 @@ public class SignalementService {
             signalement.setEntreprise(entreprise); 
             
             
+            // Ensure StatutSignalement exists to avoid not-null constraint violations
+            StatutSignalement statut = statutSignalementRepository.findStatutByLibelle(dto.getDernierStatut());
+            if (statut == null) {
+                statut = new StatutSignalement();
+                statut.setLibelle(dto.getDernierStatut());
+                statutSignalementRepository.save(statut);
+            }
             SignalementStatut signalementStatut = new SignalementStatut();
-            signalementStatut.setStatutSignalement(statutSignalementRepository.findStatutByLibelle(dto.getDernierStatut()));
-            signalementStatut.setDateStatut(java.time.LocalDateTime.now());
-            signalementStatut.setUser(user);
-            signalementStatut.setSignalement(signalement);
+            signalementStatut.setStatutSignalement(statut);
+             signalementStatut.setDateStatut(java.time.LocalDateTime.now());
+             signalementStatut.setUser(user);
+             signalementStatut.setSignalement(signalement);
             
 
             signalementRepository.save(signalement);
@@ -177,4 +203,42 @@ public class SignalementService {
         return "Sync from Firestore to DB completed";
     }
 
+
+    public SignalementStatut getLastStatut(Signalement signalement) {
+        return signalementStatutRepository.findTopBySignalementIdSignalementOrderByDateStatutDesc(signalement.getIdSignalement());
+    }
+
+    // Nouvel ajout: met à jour le champ "dernier_statut" d'un signalement dans Firestore
+    public void updateDernierStatutInFirestore(Signalement signalement) throws ExecutionException, InterruptedException {
+
+        SignalementStatut lastStatut = getLastStatut(signalement);
+
+        Firestore db = FirestoreClient.getFirestore();
+        DocumentReference docRef = db.collection(COLLECTION_NAME).document(signalement.getFirestoreId());
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("dernier_statut", lastStatut.getStatutSignalement().getLibelle());
+
+        ApiFuture<WriteResult> writeFuture = docRef.update(updates);
+        writeFuture.get(); // attendre la fin de la mise à jour
+    }
+
+    public void updateDernierStatutInFirestore(){
+        List<Signalement> signalements = signalementRepository.findAll();
+        for (Signalement s : signalements) {
+            try {
+                if (s.getFirestoreId() == null) {
+                    continue; // Skip if no Firestore ID
+                }
+                updateDernierStatutInFirestore(s);
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void addFireStoreId(Signalement signalement, String firestoreId) {
+        signalement.setFirestoreId(firestoreId);
+        signalementRepository.save(signalement);
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Repository
 public interface SignalementRepository extends JpaRepository<Signalement, Integer> {
@@ -19,4 +20,6 @@ public interface SignalementRepository extends JpaRepository<Signalement, Intege
 
     @Query("SELECT SUM(s.budget) FROM Signalement s")
     BigDecimal sumBudget();
+
+    List<Signalement> findByFirestoreIdIsNull();
 }
