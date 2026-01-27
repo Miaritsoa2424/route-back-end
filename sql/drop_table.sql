@@ -1,6 +1,6 @@
 drop TABLE avancement;
-DROP TABLE statut_signalement;
 DROP TABLE signalement_statut;
+DROP TABLE statut_signalement;
 drop table signalement;
 DROP TABLE entreprise;
 DROP TABLE tentative;

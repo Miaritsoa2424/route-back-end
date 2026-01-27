@@ -6,6 +6,7 @@ import lombok.Data;
 public class SignalementDto {
 
     private String id;
+    private String idFirestore;
     private Integer budget;
     private Integer avancement;
     private Integer surface;
