@@ -20,9 +20,16 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public Users login(@RequestBody LoginRequest loginRequest) {
-        // Delegate authentication to service
-        return loginService.login(loginRequest);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            Users user = loginService.login(loginRequest);
+            return ResponseEntity.ok(user);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "LoginFailed");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
     }
 
     @PostMapping("/register")
