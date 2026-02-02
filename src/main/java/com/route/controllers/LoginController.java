@@ -2,6 +2,7 @@ package com.route.controllers;
 
 import com.route.models.LoginRequest;
 import com.route.models.Users;
+import com.route.security.JwtUtil;
 import com.route.services.LoginService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,16 +15,27 @@ import java.util.Map;
 @RequestMapping("/api")
 public class LoginController {
     private final LoginService loginService;
+    private final JwtUtil jwtUtil;
 
-    public LoginController(LoginService loginService) {
+    public LoginController(LoginService loginService, JwtUtil jwtUtil) {
         this.loginService = loginService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
             Users user = loginService.login(loginRequest);
-            return ResponseEntity.ok(user);
+            
+            // Generate JWT token
+            String token = jwtUtil.generateToken(user.getIdentifiant());
+            
+            // Prepare response with user and token
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", user);
+            response.put("token", token);
+            
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "LoginFailed");
