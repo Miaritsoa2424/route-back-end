@@ -25,6 +25,9 @@ CREATE TABLE users(
                       date_creation TIMESTAMP NOT NULL,
                       date_derniere_connexion TIMESTAMP,
                       id_profil INTEGER NOT NULL,
+                      failed_attempts INTEGER DEFAULT 0,
+                      blocked BOOLEAN DEFAULT FALSE,
+                      id_firestore_tentative VARCHAR(100),
                       PRIMARY KEY(id_user),
                       FOREIGN KEY(id_profil) REFERENCES profil(id_profil)
 );

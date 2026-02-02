@@ -8,17 +8,23 @@ import com.route.repositories.TentativeRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutionException;
+
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.DocumentReference;
 
 @Service
 public class LoginService {
 	private final UserRepository userRepository;
 	private final TentativeRepository tentativeRepository;
+	private final Firestore firestore;
 
 	private static final int MAX_FAILED_ATTEMPTS = 3;
 
-	public LoginService(UserRepository userRepository, TentativeRepository tentativeRepository) {
+	public LoginService(UserRepository userRepository, TentativeRepository tentativeRepository, Firestore firestore) {
 		this.userRepository = userRepository;
 		this.tentativeRepository = tentativeRepository;
+		this.firestore = firestore;
 	}
 
 	/**
@@ -86,14 +92,18 @@ public class LoginService {
 		}
 		user.setBlocked(false);
 		user.setFailedAttempts(0);
-		return userRepository.save(user);
+		Users savedUser = userRepository.save(user);
+		updateFirebaseTentative(savedUser);
+		return savedUser;
 	}
 
 	public Users unblockUser(Integer userId) {
 		Users user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 		user.setBlocked(false);
 		user.setFailedAttempts(0);
-		return userRepository.save(user);
+		Users savedUser = userRepository.save(user);
+		updateFirebaseTentative(savedUser);
+		return savedUser;
 	}
 
 	/**
@@ -107,5 +117,17 @@ public class LoginService {
 			newUser.setDateCreation(LocalDateTime.now());
 		}
 		return userRepository.save(newUser);
+	}
+
+	private void updateFirebaseTentative(Users user) {
+		if (user.getIdFirestoreTentative() != null) {
+			try {
+				DocumentReference docRef = firestore.collection("tentative").document(user.getIdFirestoreTentative());
+				docRef.update("tentative", 0).get();
+			} catch (InterruptedException | ExecutionException e) {
+				// Handle exception, maybe log it
+				e.printStackTrace();
+			}
+		}
 	}
 }
