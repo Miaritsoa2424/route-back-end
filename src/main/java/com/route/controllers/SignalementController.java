@@ -10,6 +10,7 @@ import com.route.repositories.SignalementRepository;
 import com.route.repositories.SignalementStatutRepository;
 import com.route.services.SignalementService;
 
+import com.route.services.UserService;
 import io.grpc.netty.shaded.io.netty.util.Signal;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,11 +34,14 @@ public class SignalementController {
 
     private final SignalementStatutRepository signalementStatutRepository;
 
-    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository) {
+    private final UserService userService;
+
+    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository, UserService userService) {
         this.signalementRepository = signalementRepository;
         this.signalementService = signalementService;
         this.avancementRepository = avancementRepository;
         this.signalementStatutRepository = signalementStatutRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/sync")
@@ -70,6 +74,7 @@ public class SignalementController {
             signalementService.syncFromFirebaseToDB();
             signalementService.syncAllSignalementsToFirebase(dtos);
             signalementService.updateDernierStatutInFirestore();
+            userService.syncFailedAttemptsFromFirebase();
 
             return "Sync completed";
         } catch (ExecutionException | InterruptedException e) {

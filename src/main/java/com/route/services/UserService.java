@@ -11,14 +11,16 @@ import java.util.List;
 
 @Service
 public class UserService {
+    private final UserRepository userRepository;
+    private final Firestore firestore;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private Firestore firestore;
+    public UserService(UserRepository userRepository, Firestore firestore) {
+        this.userRepository = userRepository;
+        this.firestore = firestore;
+    }
 
     public void syncFailedAttemptsFromFirebase() throws Exception {
+        System.err.println("---------- COMMENCE LA SYNC ----------");
         List<QueryDocumentSnapshot> documents = firestore.collection("tentative").get().get().getDocuments();
 
         for (QueryDocumentSnapshot document : documents) {
@@ -26,13 +28,17 @@ public class UserService {
             Long tentative = document.getLong("tentative");
 
             if (email != null && tentative != null) {
-                Users user = userRepository.findByIdentifiant(email);
-                if (user != null) {
-                    user.setFailedAttempts(tentative.intValue());
-                    if (tentative >= 3) {
-                        user.setBlocked(true);
+                if (email != null && tentative != null) {
+                    Users user = userRepository.findByIdentifiant(email);
+                    if (user != null) {
+                        user.setFailedAttempts(tentative.intValue());
+                        user.setIdFirestoreTentative(document.getId());  // Ajout pour définir l'ID du document Firebase
+                        if (tentative >= 3) {
+                            user.setBlocked(true);
+                        }
+                        userRepository.save(user);
+                        System.err.println("Updated user " + email + " with failed attempts: " + tentative);
                     }
-                    userRepository.save(user);
                 }
             }
         }

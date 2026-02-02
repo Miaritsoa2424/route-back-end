@@ -38,6 +38,9 @@ public class Users {
     @Column(name = "blocked", nullable = false, columnDefinition = "boolean default false")
     private Boolean blocked = false;
 
+    @Column(name = "id_firestore_tentative", length = 100)
+    private String idFirestoreTentative;
+
     @PrePersist
     private void prePersist() {
         if (this.failedAttempts == null) {
