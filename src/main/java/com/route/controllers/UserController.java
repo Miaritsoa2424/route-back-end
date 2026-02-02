@@ -6,6 +6,7 @@ import com.google.firebase.auth.UserRecord;
 import com.route.models.Users;
 import com.route.repositories.UserRepository;
 import com.route.services.LoginService;
+import com.route.services.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +25,13 @@ public class UserController {
     private final UserRepository userRepository;
     private final LoginService loginService;
     private final FirebaseAuth firebaseAuth;
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository, LoginService loginService, FirebaseAuth firebaseAuth) {
+    public UserController(UserRepository userRepository, LoginService loginService, FirebaseAuth firebaseAuth, UserService userService) {
         this.userRepository = userRepository;
         this.loginService = loginService;
         this.firebaseAuth = firebaseAuth;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -113,6 +116,21 @@ public class UserController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "DatabaseError");
+            error.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/sync-attempts")
+    public ResponseEntity<?> syncFailedAttempts() {
+        try {
+            userService.syncFailedAttemptsFromFirebase();
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Synchronisation des tentatives échouées réussie");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "SyncError");
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
