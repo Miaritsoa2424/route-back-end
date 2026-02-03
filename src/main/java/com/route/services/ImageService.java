@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.net.URL;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +31,8 @@ public class ImageService {
 
     private static final String COLLECTION_NAME = "signalement";
 
-
+    @Value("${image.upload.dir:/uploads}")
+    private String uploadDir;
 
     public Image save(Image image){
         return imageRepository.save(image);
@@ -140,5 +142,45 @@ public class ImageService {
 
         // Enregistre dans la base de données
         return imageRepository.save(image);
+    }
+
+    /**
+     * Vérifie si une image existe déjà dans la base locale par son idFirestore.
+     * @param idFirestore l'identifiant Firestore de l'image
+     * @return true si l'image existe, false sinon
+     */
+    public boolean imageExistsByIdFirestore(String idFirestore) {
+        return imageRepository.existsByIdFirestore(idFirestore);
+    }
+
+    /**
+     * Vérifie si une image existe déjà dans la base locale par son lien.
+     * @param lien le lien de l'image
+     * @return true si l'image existe, false sinon
+     */
+    public boolean imageExistsByLien(String lien) {
+        return imageRepository.existsByLien(lien);
+    }
+
+    /**
+     * Synchronise toutes les images Firestore pour chaque signalement local.
+     * Pour chaque image Firestore non présente localement, télécharge et insère dans la base locale.
+     */
+    public void syncImagesFromFirebase(List<Signalement> signalements) {
+        for (Signalement signalement : signalements) {
+            List<Image> firebaseImages = findAllImageFromFireBase(signalement);
+            for (Image firebaseImage : firebaseImages) {
+                if (!imageExistsByIdFirestore(firebaseImage.getIdFirestore())) {
+                    // Associer le signalement local à l'image
+                    firebaseImage.setSignalement(signalement);
+                    try {
+                        saveImageFromFirestoreUrl(firebaseImage, uploadDir);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        // Optionnel : log ou gestion d'erreur
+                    }
+                }
+            }
+        }
     }
 }
