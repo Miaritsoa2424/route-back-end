@@ -8,6 +8,7 @@ import com.route.models.SignalementStatut;
 import com.route.repositories.AvancementRepository;
 import com.route.repositories.SignalementRepository;
 import com.route.repositories.SignalementStatutRepository;
+import com.route.services.ImageService;
 import com.route.services.SignalementService;
 
 import com.route.services.UserService;
@@ -36,12 +37,15 @@ public class SignalementController {
 
     private final UserService userService;
 
-    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository, UserService userService) {
+    private final ImageService  imageService;
+
+    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository, UserService userService, ImageService imageService) {
         this.signalementRepository = signalementRepository;
         this.signalementService = signalementService;
         this.avancementRepository = avancementRepository;
         this.signalementStatutRepository = signalementStatutRepository;
         this.userService = userService;
+        this.imageService = imageService;
     }
 
     @PostMapping("/sync")
@@ -75,6 +79,7 @@ public class SignalementController {
             signalementService.syncAllSignalementsToFirebase(dtos);
             signalementService.updateDernierStatutInFirestore();
             userService.syncFailedAttemptsFromFirebase();
+            imageService.syncImagesFromFirebase();
 
             return "Sync completed";
         } catch (ExecutionException | InterruptedException e) {
