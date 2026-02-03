@@ -1,7 +1,9 @@
 package com.route.controllers;
 
 import com.route.models.SignalementStatut;
+import com.route.models.Users;
 import com.route.repositories.SignalementStatutRepository;
+import com.route.services.FirebaseNotificationService;
 import com.route.services.SignalementStatutService;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,10 +17,12 @@ public class SignalementStatutController {
 
     private final SignalementStatutRepository signalementStatutRepository;
     private final SignalementStatutService signalementStatutService;
+    public final FirebaseNotificationService firebaseNotificationService;
 
-    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository, SignalementStatutService signalementStatutService) {
+    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository, SignalementStatutService signalementStatutService, FirebaseNotificationService firebaseNotificationService) {
         this.signalementStatutRepository = signalementStatutRepository;
         this.signalementStatutService = signalementStatutService;
+        this.firebaseNotificationService = firebaseNotificationService;
     }
 
     @GetMapping
@@ -33,6 +37,9 @@ public class SignalementStatutController {
 
     @PostMapping
     public SignalementStatut createSignalementStatut(@RequestBody SignalementStatut signalementStatut) {
+        SignalementStatut saved = signalementStatutRepository.save(signalementStatut);
+        Users user = saved.getSignalement().getUser();
+        firebaseNotificationService.sendNotificationToUser(user, "Mise à jour du statut", "Votre signalement a été mis à jour.");
         return signalementStatutRepository.save(signalementStatut);
     }
 
