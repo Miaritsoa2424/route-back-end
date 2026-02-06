@@ -41,8 +41,7 @@ public class Users {
     @Column(name = "id_firestore_tentative", length = 100)
     private String idFirestoreTentative;
 
-    @Column(name = "fcm_token")
-    private String fcmToken;
+    // Note: Le FCM token n'est pas stocké ici, il est géré directement par l'app mobile dans Firestore
 
     @PrePersist
     private void prePersist() {
