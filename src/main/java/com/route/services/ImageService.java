@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.route.models.Image;
 import com.route.models.Signalement;
 import com.route.repositories.ImageRepository;
-import com.route.repositories.SignalementRepository;
+
 // Ajout Firebase
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
@@ -28,9 +28,6 @@ import com.google.firebase.cloud.FirestoreClient;
 public class ImageService {
     @Autowired
     private ImageRepository imageRepository;
-
-    @Autowired
-    private SignalementRepository signalementRepository;
 
     private static final String COLLECTION_NAME = "signalement";
 
@@ -169,8 +166,8 @@ public class ImageService {
      * Synchronise toutes les images Firestore pour chaque signalement local.
      * Pour chaque image Firestore non présente localement, télécharge et insère dans la base locale.
      */
-    public void syncImagesFromFirebase() {
-        for (Signalement signalement : signalementRepository.findAll()) {
+    public void syncImagesFromFirebase(List<Signalement> signalements) {
+        for (Signalement signalement : signalements) {
             List<Image> firebaseImages = findAllImageFromFireBase(signalement);
             for (Image firebaseImage : firebaseImages) {
                 if (!imageExistsByIdFirestore(firebaseImage.getIdFirestore())) {
