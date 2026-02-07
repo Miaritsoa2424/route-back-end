@@ -1,7 +1,9 @@
 package com.route.controllers;
 
+import com.route.models.Signalement;
 import com.route.models.SignalementStatut;
 import com.route.models.Users;
+import com.route.repositories.SignalementRepository;
 import com.route.repositories.SignalementStatutRepository;
 import com.route.services.FirebaseNotificationService;
 import com.route.services.SignalementStatutService;
@@ -17,9 +19,11 @@ public class SignalementStatutController {
 
     private final SignalementStatutRepository signalementStatutRepository;
     private final SignalementStatutService signalementStatutService;
+    private final SignalementRepository signalementRepository;
     public final FirebaseNotificationService firebaseNotificationService;
 
-    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository, SignalementStatutService signalementStatutService, FirebaseNotificationService firebaseNotificationService) {
+    public SignalementStatutController(SignalementStatutRepository signalementStatutRepository, SignalementStatutService signalementStatutService, FirebaseNotificationService firebaseNotificationService, SignalementRepository signalementRepository) {
+        this.signalementRepository = signalementRepository;
         this.signalementStatutRepository = signalementStatutRepository;
         this.signalementStatutService = signalementStatutService;
         this.firebaseNotificationService = firebaseNotificationService;
@@ -38,9 +42,20 @@ public class SignalementStatutController {
     @PostMapping
     public SignalementStatut createSignalementStatut(@RequestBody SignalementStatut signalementStatut) {
         SignalementStatut saved = signalementStatutRepository.save(signalementStatut);
-        Users user = saved.getSignalement().getUser();
-        firebaseNotificationService.sendNotificationToUser(user, "Mise à jour du statut", "Votre signalement a été mis à jour.");
-        return signalementStatutRepository.save(signalementStatut);
+
+        // Recharger le signalement complet avec l'utilisateur
+        Signalement signalement = signalementRepository.findById(saved.getSignalement().getIdSignalement())
+                .orElse(null);
+
+        if (signalement != null && signalement.getUser() != null) {
+            Users user = signalement.getUser();
+            System.err.println("Utilisateur trouvé : " + user.getIdentifiant());
+            firebaseNotificationService.sendNotificationToUser(user, "Mise à jour du statut", "Votre signalement a été mis à jour.");
+        } else {
+            System.err.println("Aucun utilisateur associé au signalement");
+        }
+
+        return saved;
     }
 
     @PutMapping("/{id}")
