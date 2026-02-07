@@ -19,10 +19,10 @@ INSERT INTO statut_signalement (libelle, ordre) VALUES
 -- Insertion dans users (liée à profil)
 -- Ajout des colonnes failed_attempts et blocked pour conformité avec le modèle JPA
 INSERT INTO users (identifiant, password, date_creation, date_derniere_connexion, id_profil, failed_attempts, blocked, id_firestore_tentative) VALUES
-('rakoto@gmail.mg', 'admin', '2026-01-01 10:00:00', '2026-10-01 15:30:00', 1, 0, false, NULL),
-('sarah@gmail.mg', 'sarah', '2026-02-15 09:00:00', NULL, 2, 0, false, NULL),
-('jean@gmail.mg', 'jean', '2026-03-20 14:00:00', '2026-09-15 12:00:00', 3, 0, false, NULL),
-('miaritsoa@mail.com', 'miaritsoa', '2026-02-15 09:00:00', NULL, 1, 0, false, NULL);
+('rakoto@gmail.mg', 'adminadmin', '2026-01-01 10:00:00', '2026-10-01 15:30:00', 1, 0, false, NULL),
+('sarah@gmail.mg', 'adminadmin', '2026-02-15 09:00:00', NULL, 2, 0, false, NULL),
+('jean@gmail.mg', 'adminadmin', '2026-03-20 14:00:00', '2026-09-15 12:00:00', 3, 0, false, NULL),
+('miaritsoa@mail.com', 'adminadmin', '2026-02-15 09:00:00', NULL, 1, 0, false, NULL);
 
 
 -- Insertion dans signalement (liée à entreprise et users)

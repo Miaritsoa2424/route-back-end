@@ -12,9 +12,7 @@ import com.route.services.ImageService;
 import com.route.services.SignalementService;
 
 import com.route.services.UserService;
-import io.grpc.netty.shaded.io.netty.util.Signal;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -78,8 +76,9 @@ public class SignalementController {
             signalementService.syncFromFirebaseToDB();
             signalementService.syncAllSignalementsToFirebase(dtos);
             signalementService.updateDernierStatutInFirestore();
+            userService.syncUsers();
             userService.syncFailedAttemptsFromFirebase();
-            imageService.syncImagesFromFirebase();
+            // imageService.syncImagesFromFirebase();
 
             return "Sync completed";
         } catch (ExecutionException | InterruptedException e) {
