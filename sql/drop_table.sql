@@ -1,3 +1,4 @@
+DROP TABLE image;
 drop TABLE avancement;
 DROP TABLE signalement_statut;
 DROP TABLE statut_signalement;

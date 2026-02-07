@@ -41,6 +41,9 @@ public class Users {
     @Column(name = "id_firestore_tentative", length = 100)
     private String idFirestoreTentative;
 
+    @Column(name = "fcm_token")
+    private String fcmToken;
+
     @PrePersist
     private void prePersist() {
         if (this.failedAttempts == null) {

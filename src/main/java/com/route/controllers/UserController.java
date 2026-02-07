@@ -97,7 +97,7 @@ public class UserController {
 
             // Créer dans Firebase Auth
             UserRecord.CreateRequest request = new UserRecord.CreateRequest()
-                    .setEmail(savedUser.getIdentifiant())  // Assumant que identifiant est l'email
+                    .setEmail(savedUser.getIdentifiant())
                     .setPassword(savedUser.getPassword())
                     .setEmailVerified(false);
 
