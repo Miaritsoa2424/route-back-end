@@ -209,15 +209,49 @@ public class SignalementService {
     }
 
     // Nouvel ajout: met à jour le champ "dernier_statut" d'un signalement dans Firestore
-    public void updateDernierStatutInFirestore(Signalement signalement) throws ExecutionException, InterruptedException {
+    // public void updateDernierStatutInFirestore(Signalement signalement) throws ExecutionException, InterruptedException {
 
+    //     SignalementStatut lastStatut = getLastStatut(signalement);
+
+    //     Firestore db = FirestoreClient.getFirestore();
+    //     DocumentReference docRef = db.collection(COLLECTION_NAME).document(signalement.getFirestoreId());
+
+    //     Map<String, Object> updates = new HashMap<>();
+    //     updates.put("dernier_statut", lastStatut.getStatutSignalement().getLibelle());
+
+    //     ApiFuture<WriteResult> writeFuture = docRef.update(updates);
+    //     writeFuture.get(); // attendre la fin de la mise à jour
+    // }
+
+    // Ajouter cette méthode dans SignalementService
+    private String mapStatutToFirestore(String libelle) {
+        if (libelle == null) return "nouveau";
+        
+        switch(libelle) {
+            case "Signalé": return "nouveau";
+            case "En cours": return "en_cours";
+            case "Résolu": return "resolu";
+            case "Rejeté": return "rejete";
+            default: return "nouveau";
+        }
+    }
+
+    // Modifier la méthode updateDernierStatutInFirestore(Signalement signalement)
+    public void updateDernierStatutInFirestore(Signalement signalement) throws ExecutionException, InterruptedException {
         SignalementStatut lastStatut = getLastStatut(signalement);
+        
+        if (lastStatut == null || signalement.getFirestoreId() == null) {
+            return; // Skip si pas de statut ou pas d'ID Firestore
+        }
 
         Firestore db = FirestoreClient.getFirestore();
         DocumentReference docRef = db.collection(COLLECTION_NAME).document(signalement.getFirestoreId());
 
+        // Mapper le statut PostgreSQL vers le format Firestore
+        String statutFirestore = mapStatutToFirestore(lastStatut.getStatutSignalement().getLibelle());
+
         Map<String, Object> updates = new HashMap<>();
-        updates.put("dernier_statut", lastStatut.getStatutSignalement().getLibelle());
+        updates.put("dernier_statut", statutFirestore); // Utiliser le statut mappé
 
         ApiFuture<WriteResult> writeFuture = docRef.update(updates);
         writeFuture.get(); // attendre la fin de la mise à jour
