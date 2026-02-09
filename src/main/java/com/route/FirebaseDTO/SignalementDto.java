@@ -7,6 +7,7 @@ public class SignalementDto {
 
     private String id;
     private String idFirestore;
+    private Integer idSignalement;
     private Integer budget;
     private Integer avancement;
     private Integer surface;
@@ -16,4 +17,13 @@ public class SignalementDto {
     private String user;
     private String dernierStatut;
     private String entreprise;
+
+
+    public Integer getIdSignalement() {
+        return idSignalement;
+    }
+    
+    public void setIdSignalement(Integer idSignalement) {
+        this.idSignalement = idSignalement;
+    }
 }

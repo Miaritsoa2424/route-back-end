@@ -27,9 +27,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            // .authorizeHttpRequests(auth -> auth
+            //     .requestMatchers("/api/login", "/api/register", "/api/signalement-statuts/latest",
+            //                     "/api/signalements/dto", "/api/signalements/*/images", "/api/stats").permitAll()
+            //     .anyRequest().authenticated()
+            // )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/login", "/api/register", "/api/signalement-statuts/latest",
-                                "/api/signalements/dto", "/api/signalements/*/images", "/api/stats").permitAll()
+                                "/api/signalements", "/api/signalements/*", "/api/signalements/*/images", 
+                                "/api/signalements/dto", "/api/stats").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

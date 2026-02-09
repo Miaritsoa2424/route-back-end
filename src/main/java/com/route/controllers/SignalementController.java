@@ -49,21 +49,44 @@ public class SignalementController {
     @PostMapping("/sync")
     public String syncToFirebase() {
         try {
-            List<Signalement> signalements = signalementRepository.findByFirestoreIdIsNull();
+            // 1. Synchroniser de Firestore vers PostgreSQL (nouveaux signalements)
+            signalementService.syncFromFirebaseToDB();
+            
+            // 2. Synchroniser TOUS les signalements PostgreSQL vers Firestore
+            List<Signalement> allSignalements = signalementRepository.findAll();
             List<SignalementDto> dtos = new ArrayList<>();
-            for (Signalement s : signalements) {
+            
+            for (Signalement s : allSignalements) {
                 SignalementDto dto = new SignalementDto();
-                dto.setId(s.getIdSignalement().toString()); // Use ID as string
+                
+                // Utiliser l'ID Firestore existant ou en créer un nouveau
+                if (s.getFirestoreId() == null || s.getFirestoreId().isEmpty()) {
+                    dto.setIdFirestore(null); // Firestore générera un ID
+                } else {
+                    dto.setIdFirestore(s.getFirestoreId());
+                }
+                
+                dto.setId(s.getIdSignalement().toString());
                 dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
                 dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
-                // Compute avancement: Sum latest Avancement.avancement for this signalement
+                
+                // Avancement
                 List<Avancement> avancements = avancementRepository.findBySignalement(s);
-                dto.setAvancement(avancements.stream().mapToInt(a -> a.getAvancement().intValue()).sum()); // Or take latest
-                // Compute dernierStatut: Latest StatutSignalement.libelle for this signalement
+                dto.setAvancement(avancements.stream()
+                    .mapToInt(a -> a.getAvancement().intValue())
+                    .sum());
+                
+                // Dernier statut (mappé vers format Firestore)
                 List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
-                dto.setDernierStatut(statuts.stream().max((a,b) -> a.getDateStatut().compareTo(b.getDateStatut())).map(ss -> ss.getStatutSignalement().getLibelle()).orElse("Unknown"));
-                dto.setUser(s.getUser().getIdentifiant()); // Assuming User has identifiant
+                String dernierStatut = statuts.stream()
+                    .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
+                    .map(ss -> mapStatutToFirestore(ss.getStatutSignalement().getLibelle()))
+                    .orElse("nouveau");
+                dto.setDernierStatut(dernierStatut);
+                
+                dto.setUser(s.getUser().getIdentifiant());
                 dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
+                
                 // Localisation
                 if (s.getLocalisation() != null) {
                     LocalisationDto loc = new LocalisationDto();
@@ -71,16 +94,18 @@ public class SignalementController {
                     loc.setLongitude(s.getLongitude());
                     dto.setLocalisation(loc);
                 }
+                
                 dtos.add(dto);
             }
-            signalementService.syncFromFirebaseToDB();
+            
+            // 3. Envoyer tous les signalements vers Firestore
             signalementService.syncAllSignalementsToFirebase(dtos);
-            signalementService.updateDernierStatutInFirestore();
+            
+            // 4. Synchroniser les utilisateurs et tentatives
             userService.syncUsers();
             userService.syncFailedAttemptsFromFirebase();
-            // imageService.syncImagesFromFirebase();
 
-            return "Sync completed";
+            return "Sync completed: " + dtos.size() + " signalements synchronisés";
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
             return "Sync failed: " + e.getMessage();
@@ -90,6 +115,18 @@ public class SignalementController {
         }
     }
 
+        // Méthode helper pour mapper les statuts
+        private String mapStatutToFirestore(String libelle) {
+            if (libelle == null) return "nouveau";
+            
+            switch(libelle) {
+                case "Signalé": return "nouveau";
+                case "En cours": return "en_cours";
+                case "Résolu": return "resolu";
+                case "Rejeté": return "rejete";
+                default: return "nouveau";
+            }
+        }
     @PostMapping("/update-firestore-status")
     public String updateFirestoreStatus() throws ExecutionException, InterruptedException {
        signalementService.updateDernierStatutInFirestore();
