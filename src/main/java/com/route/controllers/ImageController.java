@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")  // ← AJOUTER CETTE LIGNE
 public class ImageController {
 
     @Autowired
@@ -22,7 +23,7 @@ public class ImageController {
     public List<Image> getImagesBySignalement(@PathVariable("id") Integer id) {
         Signalement signalement = signalementRepository.findById(id).orElse(null);
         if (signalement == null) {
-            return List.of(); // ou gérer l'erreur 404
+            return List.of();
         }
         return imageRepository.findBySignalement(signalement);
     }
