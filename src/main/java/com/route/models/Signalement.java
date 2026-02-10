@@ -34,6 +34,9 @@ public class Signalement {
     @Column(name = "description")
     private String description;
 
+    @Column(name = "niveau")
+    private Integer niveau;
+
     // Ajoutez ces getters (assumant que localisation est un Point)
     public double getLongitude() {
         if (localisation instanceof Point) {
