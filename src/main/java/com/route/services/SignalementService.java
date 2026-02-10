@@ -156,6 +156,9 @@ public class SignalementService {
             Double budget = getDoubleFromFirestore(doc, "budget");
             Long avancement = getLongFromFirestore(doc, "avancement");
             Long surface = getLongFromFirestore(doc, "surface");
+            String description = doc.getString("description");
+
+            signalement.setDescription(description != null ? description : "");
 
             signalement.setBudget(budget != null ? budget.doubleValue() : 0);
             signalement.setAvancement(avancement != null ? avancement.intValue() : 0);
@@ -199,6 +202,7 @@ public class SignalementService {
         data.put("email", signalementDto.getUser());
         data.put("dernier_statut", signalementDto.getDernierStatut());
         data.put("entreprise", signalementDto.getEntreprise());
+        data.put("description", signalementDto.getDescription());
         
         // Use the ID as document ID, or generate one if null
         String docId = signalementDto.getIdFirestore() != null ? signalementDto.getIdFirestore() : db.collection(COLLECTION_NAME).document().getId();
@@ -288,6 +292,7 @@ public class SignalementService {
 
             // Create or update Signalement
             Signalement signalement = new Signalement();
+            signalement.setDescription(dto.getDescription());
             signalement.setFirestoreId(dto.getId());
             //signalement.setIdSignalement(Integer.parseInt(dto.getId())); // Assuming ID is integer
             signalement.setBudget(dto.getBudget() != null ? BigDecimal.valueOf(dto.getBudget()) : null);
