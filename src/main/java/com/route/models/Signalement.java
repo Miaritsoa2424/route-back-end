@@ -31,6 +31,9 @@ public class Signalement {
     @Column(name = "localisation", nullable = false, columnDefinition = "geography(Point,4326)")
     private Point localisation;
 
+    @Column(name = "description")
+    private String description;
+
     // Ajoutez ces getters (assumant que localisation est un Point)
     public double getLongitude() {
         if (localisation instanceof Point) {
