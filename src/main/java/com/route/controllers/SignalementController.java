@@ -80,15 +80,17 @@ public class SignalementController {
                                 .mapToInt(a -> a.getAvancement().intValue())
                                 .sum());
 
+                 // Dernier statut (mappé vers format Firestore)
                 List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
-                dto.setDernierStatut(
-                        statuts.stream()
-                                .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
-                                .map(ss -> ss.getStatutSignalement().getLibelle())
-                                .orElse("Unknown"));
+                String dernierStatut = statuts.stream()
+                    .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
+                    .map(ss -> mapStatutToFirestore(ss.getStatutSignalement().getLibelle()))
+                    .orElse("nouveau");
+                dto.setDernierStatut(dernierStatut);
 
                 dto.setUser(s.getUser().getIdentifiant());
                 dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
+
 
                 if (s.getLocalisation() != null) {
                     LocalisationDto loc = new LocalisationDto();
@@ -102,7 +104,8 @@ public class SignalementController {
 
             signalementService.syncFromFirebaseToDB();
             signalementService.syncAllSignalementsToFirebase(dtos);
-            signalementService.updateDernierStatutInFirestore();
+            
+            // 4. Synchroniser les utilisateurs et tentatives
             userService.syncUsers();
             userService.syncFailedAttemptsFromFirebase();
             imageService.syncImagesFromFirebase();
@@ -121,6 +124,18 @@ public class SignalementController {
         }
     }
 
+        // Méthode helper pour mapper les statuts
+        private String mapStatutToFirestore(String libelle) {
+            if (libelle == null) return "nouveau";
+            
+            switch(libelle) {
+                case "Signalé": return "nouveau";
+                case "En cours": return "en_cours";
+                case "Résolu": return "resolu";
+                case "Rejeté": return "rejete";
+                default: return "nouveau";
+            }
+        }
     @PostMapping("/update-firestore-status")
     public String updateFirestoreStatus() throws ExecutionException, InterruptedException {
         signalementService.updateDernierStatutInFirestore();
