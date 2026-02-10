@@ -12,7 +12,13 @@ import com.route.services.ImageService;
 import com.route.services.SignalementService;
 
 import com.route.services.UserService;
+import com.route.utils.ApiResponse;
+import com.route.utils.InternetUtils;
 
+import jakarta.transaction.Transactional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -35,9 +41,11 @@ public class SignalementController {
 
     private final UserService userService;
 
-    private final ImageService  imageService;
+    private final ImageService imageService;
 
-    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService, AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository, UserService userService, ImageService imageService) {
+    public SignalementController(SignalementRepository signalementRepository, SignalementService signalementService,
+            AvancementRepository avancementRepository, SignalementStatutRepository signalementStatutRepository,
+            UserService userService, ImageService imageService) {
         this.signalementRepository = signalementRepository;
         this.signalementService = signalementService;
         this.avancementRepository = avancementRepository;
@@ -46,72 +54,73 @@ public class SignalementController {
         this.imageService = imageService;
     }
 
+    @Transactional
     @PostMapping("/sync")
-    public String syncToFirebase() {
+    public ResponseEntity<ApiResponse> syncToFirebase() {
+
         try {
-            // 1. Synchroniser de Firestore vers PostgreSQL (nouveaux signalements)
-            signalementService.syncFromFirebaseToDB();
-            
-            // 2. Synchroniser TOUS les signalements PostgreSQL vers Firestore
-            List<Signalement> allSignalements = signalementRepository.findAll();
+            if (!InternetUtils.hasInternetAccess()) {
+                return ResponseEntity
+                        .status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(new ApiResponse(false, "Aucune connexion Internet. Synchronisation impossible."));
+            }
+
+            List<Signalement> signalements = signalementRepository.findByFirestoreIdIsNull();
             List<SignalementDto> dtos = new ArrayList<>();
-            
-            for (Signalement s : allSignalements) {
+
+            for (Signalement s : signalements) {
                 SignalementDto dto = new SignalementDto();
-                
-                // Utiliser l'ID Firestore existant ou en créer un nouveau
-                if (s.getFirestoreId() == null || s.getFirestoreId().isEmpty()) {
-                    dto.setIdFirestore(null); // Firestore générera un ID
-                } else {
-                    dto.setIdFirestore(s.getFirestoreId());
-                }
-                
                 dto.setId(s.getIdSignalement().toString());
                 dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
                 dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
-                
-                // Avancement
+
                 List<Avancement> avancements = avancementRepository.findBySignalement(s);
-                dto.setAvancement(avancements.stream()
-                    .mapToInt(a -> a.getAvancement().intValue())
-                    .sum());
-                
-                // Dernier statut (mappé vers format Firestore)
+                dto.setAvancement(
+                        avancements.stream()
+                                .mapToInt(a -> a.getAvancement().intValue())
+                                .sum());
+
+                 // Dernier statut (mappé vers format Firestore)
                 List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
                 String dernierStatut = statuts.stream()
                     .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
                     .map(ss -> mapStatutToFirestore(ss.getStatutSignalement().getLibelle()))
                     .orElse("nouveau");
                 dto.setDernierStatut(dernierStatut);
-                
+
                 dto.setUser(s.getUser().getIdentifiant());
                 dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
-                
-                // Localisation
+
+
                 if (s.getLocalisation() != null) {
                     LocalisationDto loc = new LocalisationDto();
                     loc.setLatitude(s.getLatitude());
                     loc.setLongitude(s.getLongitude());
                     dto.setLocalisation(loc);
                 }
-                
+
                 dtos.add(dto);
             }
-            
-            // 3. Envoyer tous les signalements vers Firestore
+
+            signalementService.syncFromFirebaseToDB();
             signalementService.syncAllSignalementsToFirebase(dtos);
             
             // 4. Synchroniser les utilisateurs et tentatives
             userService.syncUsers();
             userService.syncFailedAttemptsFromFirebase();
+            imageService.syncImagesFromFirebase();
 
-            return "Sync completed: " + dtos.size() + " signalements synchronisés";
+            return ResponseEntity.ok(
+                    new ApiResponse(true, "Synchronisation terminée avec succès"));
+
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
-            return "Sync failed: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Erreur Firebase : " + e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
-            return "Sync failed: " + e.getMessage();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Erreur interne : " + e.getMessage()));
         }
     }
 
@@ -129,7 +138,7 @@ public class SignalementController {
         }
     @PostMapping("/update-firestore-status")
     public String updateFirestoreStatus() throws ExecutionException, InterruptedException {
-       signalementService.updateDernierStatutInFirestore();
+        signalementService.updateDernierStatutInFirestore();
         return "Update completed";
     }
 
