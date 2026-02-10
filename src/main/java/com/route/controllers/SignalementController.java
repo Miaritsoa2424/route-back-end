@@ -101,14 +101,15 @@ public class SignalementController {
 
                 dtos.add(dto);
             }
+            
+            userService.syncUsers();
+            userService.syncFailedAttemptsFromFirebase();
 
             signalementService.syncAllSignalementsToFirebase(dtos);
             signalementService.updateDernierStatutInFirestore();
             signalementService.syncFromFirebaseToDB();
             
             // 4. Synchroniser les utilisateurs et tentatives
-            userService.syncUsers();
-            userService.syncFailedAttemptsFromFirebase();
             imageService.syncImagesFromFirebase();
 
             return ResponseEntity.ok(
