@@ -8,7 +8,7 @@ public class SignalementDto {
     private String id;
     private String idFirestore;
     private Integer idSignalement;
-    private Integer budget;
+    private Double budget;
     private Integer avancement;
     private Integer surface;
 

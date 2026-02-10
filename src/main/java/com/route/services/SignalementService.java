@@ -115,7 +115,7 @@ public class SignalementService {
             Long avancement = doc.getLong("avancement");
             Long surface = doc.getLong("surface");
 
-            signalement.setBudget(budget != null ? budget.intValue() : 0);
+            signalement.setBudget(budget != null ? budget.doubleValue() : 0);
             signalement.setAvancement(avancement != null ? avancement.intValue() : 0);
             signalement.setSurface(surface != null ? surface.intValue() : 0);
 
@@ -335,6 +335,7 @@ public class SignalementService {
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("dernier_statut", statutFirestore); // Utiliser le statut mappé
+        updates.put("budget", signalement.getBudget());
 
         ApiFuture<WriteResult> writeFuture = docRef.update(updates);
         writeFuture.get(); // attendre la fin de la mise à jour
