@@ -59,11 +59,11 @@ public class SignalementController {
     public ResponseEntity<ApiResponse> syncToFirebase() {
 
         try {
-            // if (!InternetUtils.hasInternetAccess()) {
-            //     return ResponseEntity
-            //             .status(HttpStatus.SERVICE_UNAVAILABLE)
-            //             .body(new ApiResponse(false, "Aucune connexion Internet. Synchronisation impossible."));
-            // }
+            if (!InternetUtils.hasInternetAccess()) {
+                return ResponseEntity
+                        .status(HttpStatus.SERVICE_UNAVAILABLE)
+                        .body(new ApiResponse(false, "Aucune connexion Internet. Synchronisation impossible."));
+            }
 
             List<Signalement> signalements = signalementRepository.findByFirestoreIdIsNull();
             List<SignalementDto> dtos = new ArrayList<>();
@@ -82,11 +82,11 @@ public class SignalementController {
 
                  // Dernier statut (mappé vers format Firestore)
                 List<SignalementStatut> statuts = signalementStatutRepository.findBySignalement(s);
-                String dernierStatut = statuts.stream()
-                    .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
-                    .map(ss -> mapStatutToFirestore(ss.getStatutSignalement().getLibelle()))
-                    .orElse("nouveau");
-                dto.setDernierStatut(dernierStatut);
+                // String dernierStatut = statuts.stream()
+                //     .max((a, b) -> a.getDateStatut().compareTo(b.getDateStatut()))
+                //     .map(ss -> mapStatutToFirestore(ss.getStatutSignalement().getLibelle()))
+                //     .orElse("nouveau");
+                dto.setDernierStatut(statuts.get(statuts.size() - 1).getStatutSignalement().getLibelle());
 
                 dto.setUser(s.getUser().getIdentifiant());
                 dto.setEntreprise(s.getEntreprise() != null ? s.getEntreprise().getNom() : null);
@@ -102,8 +102,9 @@ public class SignalementController {
                 dtos.add(dto);
             }
 
-            signalementService.syncFromFirebaseToDB();
             signalementService.syncAllSignalementsToFirebase(dtos);
+            signalementService.updateDernierStatutInFirestore();
+            signalementService.syncFromFirebaseToDB();
             
             // 4. Synchroniser les utilisateurs et tentatives
             userService.syncUsers();

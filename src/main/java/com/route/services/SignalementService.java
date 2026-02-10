@@ -330,7 +330,8 @@ public class SignalementService {
         DocumentReference docRef = db.collection(COLLECTION_NAME).document(signalement.getFirestoreId());
 
         // Mapper le statut PostgreSQL vers le format Firestore
-        String statutFirestore = mapStatutToFirestore(lastStatut.getStatutSignalement().getLibelle());
+        // String statutFirestore = mapStatutToFirestore(lastStatut.getStatutSignalement().getLibelle());
+        String statutFirestore = lastStatut.getStatutSignalement().getLibelle(); // Utiliser le libellé tel quel pour le moment
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("dernier_statut", statutFirestore); // Utiliser le statut mappé
