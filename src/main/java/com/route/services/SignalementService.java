@@ -96,6 +96,44 @@ public class SignalementService {
     //     return projets;
     // }
 
+    /**
+     * Méthode utilitaire pour récupérer un nombre depuis Firestore (peut être String ou Number)
+     */
+    private Double getDoubleFromFirestore(DocumentSnapshot doc, String fieldName) {
+        Object value = doc.get(fieldName);
+        if (value == null) return null;
+        
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        } else if (value instanceof String) {
+            try {
+                return Double.parseDouble((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Méthode utilitaire pour récupérer un Long depuis Firestore (peut être String ou Number)
+     */
+    private Long getLongFromFirestore(DocumentSnapshot doc, String fieldName) {
+        Object value = doc.get(fieldName);
+        if (value == null) return null;
+        
+        if (value instanceof Number) {
+            return ((Number) value).longValue();
+        } else if (value instanceof String) {
+            try {
+                return Long.parseLong((String) value);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
     public List<SignalementDto> listSignalements()
         throws ExecutionException, InterruptedException {
 
@@ -113,11 +151,11 @@ public class SignalementService {
             signalement.setId(doc.getId()); // ID Firestore
             
             // Récupérer id_signalement depuis Firestore
-            Long idSignalement = doc.getLong("id_signalement");
+            Long idSignalement = getLongFromFirestore(doc, "id_signalement");
             signalement.setIdSignalement(idSignalement != null ? idSignalement.intValue() : null);
-            Long budget = doc.getLong("budget");
-            Long avancement = doc.getLong("avancement");
-            Long surface = doc.getLong("surface");
+            Double budget = getDoubleFromFirestore(doc, "budget");
+            Long avancement = getLongFromFirestore(doc, "avancement");
+            Long surface = getLongFromFirestore(doc, "surface");
 
             signalement.setBudget(budget != null ? budget.doubleValue() : 0);
             signalement.setAvancement(avancement != null ? avancement.intValue() : 0);
