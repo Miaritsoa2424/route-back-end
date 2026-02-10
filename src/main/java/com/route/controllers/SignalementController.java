@@ -59,11 +59,11 @@ public class SignalementController {
     public ResponseEntity<ApiResponse> syncToFirebase() {
 
         try {
-            if (!InternetUtils.hasInternetAccess()) {
-                return ResponseEntity
-                        .status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(new ApiResponse(false, "Aucune connexion Internet. Synchronisation impossible."));
-            }
+            // if (!InternetUtils.hasInternetAccess()) {
+            //     return ResponseEntity
+            //             .status(HttpStatus.SERVICE_UNAVAILABLE)
+            //             .body(new ApiResponse(false, "Aucune connexion Internet. Synchronisation impossible."));
+            // }
 
             List<Signalement> signalements = signalementRepository.findByFirestoreIdIsNull();
             List<SignalementDto> dtos = new ArrayList<>();

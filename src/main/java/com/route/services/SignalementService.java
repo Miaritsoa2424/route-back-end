@@ -268,6 +268,7 @@ public class SignalementService {
             if (statut == null) {
                 statut = new StatutSignalement();
                 statut.setLibelle(dto.getDernierStatut());
+                statut.setOrdre(1); // Default ordre, adjust as needed
                 statutSignalementRepository.save(statut);
             }
             SignalementStatut signalementStatut = new SignalementStatut();
