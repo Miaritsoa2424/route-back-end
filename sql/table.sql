@@ -73,3 +73,6 @@ CREATE TABLE log(
                     PRIMARY KEY(id_tentative_log),
                     FOREIGN KEY(id_user) REFERENCES users(id_user)
 );
+
+
+ALTER COLUMN lien TYPE VARCHAR(255);

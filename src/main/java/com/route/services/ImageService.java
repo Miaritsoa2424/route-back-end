@@ -141,7 +141,7 @@ public class ImageService {
         }
 
         // Met à jour le lien dans l'objet Image (ex: "/uploads/nomfichier.jpg")
-        image.setLien(uploadDir + "/" + fileName);
+        image.setLien(image.getLien());
 
         // Enregistre dans la base de données
         return imageRepository.save(image);

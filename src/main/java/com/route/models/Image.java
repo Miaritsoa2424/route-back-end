@@ -20,7 +20,7 @@ public class Image {
     @Temporal(TemporalType.TIMESTAMP)
     private Date date;
 
-    @Column(name = "lien", nullable = false, length = 50)
+    @Column(name = "lien", nullable = false, length = 255)
     private String lien;
 
     @Column(name = "id_firestore", length = 50)
