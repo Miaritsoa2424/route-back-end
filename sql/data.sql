@@ -9,6 +9,15 @@ INSERT INTO entreprise (nom) VALUES
 ('Colas'),
 ('Magic');
 
+-- Insertion dans prix_entreprise (liée à entreprise)
+INSERT INTO prix_entreprise (prix, date_prix, id_entreprise) VALUES
+(150000.00, '2025-01-15', 1),  -- Colas - ancien prix
+(165000.00, '2025-06-20', 1),  -- Colas - prix moyen
+(180000.00, '2026-01-10', 1),  -- Colas - prix récent
+(120000.00, '2025-02-10', 2),  -- Magic - ancien prix
+(135000.00, '2025-08-15', 2),  -- Magic - prix moyen
+(145000.00, '2026-01-25', 2);  -- Magic - prix récent
+
 -- Insertion dans statut_signalement
 INSERT INTO statut_signalement (libelle, ordre) VALUES
 ('Signalé', 1),

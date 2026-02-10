@@ -173,22 +173,54 @@ public class SignalementController {
 
     @PutMapping("/{id}")
     public Signalement updateSignalement(@PathVariable Integer id, @RequestBody Signalement signalementDetails) {
-        Optional<Signalement> optionalSignalement = signalementRepository.findById(id);
-        if (optionalSignalement.isPresent()) {
-            Signalement signalement = optionalSignalement.get();
-            signalement.setSurface(signalementDetails.getSurface());
-            signalement.setBudget(signalementDetails.getBudget());
-            signalement.setLocalisation(signalementDetails.getLocalisation());
-            signalement.setEntreprise(signalementDetails.getEntreprise());
-            signalement.setUser(signalementDetails.getUser());
-            return signalementRepository.save(signalement);
-        } else {
-            throw new RuntimeException("Signalement not found with id " + id);
+        try {
+            Optional<Signalement> optionalSignalement = signalementRepository.findById(id);
+            if (optionalSignalement.isPresent()) {
+                Signalement signalement = optionalSignalement.get();
+                signalement.setSurface(signalementDetails.getSurface());
+                // signalement.setBudget(signalementDetails.getBudget());
+                signalement.setLocalisation(signalementDetails.getLocalisation());
+                signalement.setEntreprise(signalementDetails.getEntreprise());
+                signalement.setUser(signalementDetails.getUser());
+                signalementService.calculerEtMettreAJourBudget(id);
+                return signalementRepository.save(signalement);
+            } else {
+                throw new RuntimeException("Signalement not found with id " + id);
+            }
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Error updating signalement: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
     public void deleteSignalement(@PathVariable Integer id) {
         signalementRepository.deleteById(id);
+    }
+
+    @PutMapping("/{id}/entreprise/{idEntreprise}")
+    public ResponseEntity<Signalement> assignerEntreprise(
+            @PathVariable Integer id,
+            @PathVariable Integer idEntreprise) {
+        try {
+            Signalement signalement = signalementService.assignerEntreprise(id, idEntreprise);
+            return ResponseEntity.ok(signalement);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}/niveau/{niveau}")
+    public ResponseEntity<Signalement> modifierNiveau(
+            @PathVariable Integer id,
+            @PathVariable Integer niveau) {
+        try {
+            Signalement signalement = signalementService.modifierNiveau(id, niveau);
+            return ResponseEntity.ok(signalement);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
