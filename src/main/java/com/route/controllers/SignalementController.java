@@ -71,7 +71,7 @@ public class SignalementController {
             for (Signalement s : signalements) {
                 SignalementDto dto = new SignalementDto();
                 dto.setId(s.getIdSignalement().toString());
-                dto.setBudget(s.getBudget() != null ? s.getBudget().intValue() : 0);
+                dto.setBudget(s.getBudget() != null ? s.getBudget().doubleValue() : 0);
                 dto.setSurface(s.getSurface() != null ? s.getSurface().intValue() : 0);
 
                 List<Avancement> avancements = avancementRepository.findBySignalement(s);
