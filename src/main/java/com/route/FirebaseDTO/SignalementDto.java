@@ -11,6 +11,7 @@ public class SignalementDto {
     private Double budget;
     private Integer avancement;
     private Integer surface;
+    private String description;
 
     private LocalisationDto localisation;
 
